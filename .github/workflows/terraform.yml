@@ -1,0 +1,56 @@
+name: Terraform
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.0.0
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Install Terragrunt
+      run: |
+        curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.31.0/terragrunt_linux_amd64
+        chmod +x terragrunt
+        sudo mv terragrunt /usr/local/bin/
+
+    - name: Initialize Terragrunt
+      run: |
+        cd live/dev/vpc
+        terragrunt init
+
+    - name: Apply VPC Configuration
+      run: |
+        cd live/dev/vpc
+        terragrunt apply -auto-approve
+
+    - name: Initialize Terragrunt for EKS
+      run: |
+        cd live/dev/eks
+        terragrunt init
+
+    - name: Apply EKS Configuration
+      run: |
+        cd live/dev/eks
+        terragrunt apply -auto-approve
