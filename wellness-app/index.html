@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Holistic Wellness Hub</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Holistic Wellness Hub</h1>
+      <p>Fitness tracking, workouts, meal planning, meditation, and mindfulness in one app.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card" id="fitness-tracker">
+        <h2>Fitness Tracker + Workout Planner</h2>
+        <form id="workout-form">
+          <label>
+            Workout Type
+            <input type="text" id="workout-type" placeholder="Strength, Cardio, Yoga" required />
+          </label>
+          <label>
+            Duration (minutes)
+            <input type="number" id="workout-duration" min="1" required />
+          </label>
+          <label>
+            Calories Burned (optional)
+            <input type="number" id="workout-calories" min="0" />
+          </label>
+          <button type="submit">Add Workout</button>
+        </form>
+        <ul id="workout-list" class="entry-list"></ul>
+      </section>
+
+      <section class="card" id="meal-planning">
+        <h2>Meal Planning</h2>
+        <form id="meal-form">
+          <label>
+            Day
+            <select id="meal-day" required>
+              <option value="">Select Day</option>
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+              <option>Saturday</option>
+              <option>Sunday</option>
+            </select>
+          </label>
+          <label>
+            Meal Type
+            <select id="meal-type" required>
+              <option value="">Select Meal</option>
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option>Snack</option>
+            </select>
+          </label>
+          <label>
+            Meal Plan
+            <input type="text" id="meal-name" placeholder="Grilled salmon with veggies" required />
+          </label>
+          <button type="submit">Add Meal</button>
+        </form>
+        <ul id="meal-list" class="entry-list"></ul>
+      </section>
+
+      <section class="card" id="meditation">
+        <h2>Meditation & Mindfulness</h2>
+        <div class="timer-box">
+          <label>
+            Meditation Session (minutes)
+            <input type="number" id="meditation-minutes" min="1" value="5" />
+          </label>
+          <button id="start-session" type="button">Start Session</button>
+          <button id="stop-session" type="button" class="secondary">Stop</button>
+          <p id="timer-status">Timer not started.</p>
+        </div>
+
+        <form id="mindfulness-form">
+          <label>
+            Mindfulness Reflection
+            <textarea id="mindfulness-note" rows="3" placeholder="How do you feel today?" required></textarea>
+          </label>
+          <button type="submit">Save Reflection</button>
+        </form>
+        <ul id="mindfulness-list" class="entry-list"></ul>
+      </section>
+
+      <section class="card" id="summary">
+        <h2>Today’s Snapshot</h2>
+        <div class="summary-item"><strong>Total workouts:</strong> <span id="summary-workouts">0</span></div>
+        <div class="summary-item"><strong>Total minutes trained:</strong> <span id="summary-minutes">0</span></div>
+        <div class="summary-item"><strong>Total calories burned:</strong> <span id="summary-calories">0</span></div>
+        <div class="summary-item"><strong>Meals planned:</strong> <span id="summary-meals">0</span></div>
+        <div class="summary-item"><strong>Mindfulness notes:</strong> <span id="summary-notes">0</span></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
