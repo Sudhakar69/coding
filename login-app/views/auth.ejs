@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= mode === 'login' ? 'MPIN Login' : 'MPIN Register' %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <section class="card">
+      <header class="brand-box">FinFrnd</header>
+
+      <h1 class="heading">MPIN</h1>
+
+      <% if (message) { %>
+        <p class="status success"><%= message %></p>
+      <% } %>
+      <% if (error) { %>
+        <p class="status error"><%= error %></p>
+      <% } %>
+
+      <form method="post" action="/<%= mode %>" class="form" autocomplete="off">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter name" required />
+
+        <label for="mpin">4-digit MPIN</label>
+        <input
+          type="password"
+          id="mpin"
+          name="mpin"
+          inputmode="numeric"
+          pattern="\\d{4}"
+          maxlength="4"
+          placeholder="••••"
+          required
+        />
+
+        <button type="submit" class="primary-btn"><%= mode === 'login' ? 'LogIn' : 'Register' %></button>
+      </form>
+
+      <a class="secondary-link" href="/<%= mode === 'login' ? 'register' : 'login' %>">
+        <%= mode === 'login' ? 'Register' : 'Back to Login' %>
+      </a>
+
+      <div class="fingerprint-box" aria-hidden="true">
+        <h2>Finger Print</h2>
+        <div class="fingerprint-art">🌀</div>
+      </div>
+    </section>
+
+    <footer class="footer">Copy rights @2026 FinFrnd</footer>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
