@@ -1,174 +1,239 @@
 const keys = {
-  workouts: "wellness_workouts",
-  meals: "wellness_meals",
-  notes: "wellness_notes",
+  config: "finfrnd_drive_config",
+  cachedMpin: "finfrnd_cached_mpin",
 };
+
+const loginForm = document.getElementById("login-form");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const cacheMpinInput = document.getElementById("cache-mpin");
+const driveFileIdInput = document.getElementById("drive-file-id");
+const driveApiKeyInput = document.getElementById("drive-api-key");
+const registerWebhookInput = document.getElementById("register-webhook");
+const registerBtn = document.getElementById("register-btn");
+const fingerBtn = document.getElementById("finger-btn");
+const statusText = document.getElementById("status");
+const mpinInputs = [...document.querySelectorAll(".mpin")];
 
 const state = {
-  workouts: load(keys.workouts),
-  meals: load(keys.meals),
-  notes: load(keys.notes),
+  config: load(keys.config, { driveFileId: "", driveApiKey: "", registerWebhook: "" }),
+  cachedMpin: load(keys.cachedMpin, {}),
 };
 
-const workoutForm = document.getElementById("workout-form");
-const workoutList = document.getElementById("workout-list");
-const mealForm = document.getElementById("meal-form");
-const mealList = document.getElementById("meal-list");
-const mindfulnessForm = document.getElementById("mindfulness-form");
-const mindfulnessList = document.getElementById("mindfulness-list");
+hydrateConfig();
+setupMpinInputs();
+autofillMpinFromCache();
 
-const summaryWorkouts = document.getElementById("summary-workouts");
-const summaryMinutes = document.getElementById("summary-minutes");
-const summaryCalories = document.getElementById("summary-calories");
-const summaryMeals = document.getElementById("summary-meals");
-const summaryNotes = document.getElementById("summary-notes");
-
-const meditationMinutes = document.getElementById("meditation-minutes");
-const startSessionBtn = document.getElementById("start-session");
-const stopSessionBtn = document.getElementById("stop-session");
-const timerStatus = document.getElementById("timer-status");
-
-let timer = null;
-let secondsRemaining = 0;
-
-workoutForm.addEventListener("submit", (event) => {
+loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const type = document.getElementById("workout-type").value.trim();
-  const duration = Number(document.getElementById("workout-duration").value);
-  const calories = Number(document.getElementById("workout-calories").value || 0);
 
-  state.workouts.unshift({
-    type,
-    duration,
-    calories,
-    at: new Date().toISOString(),
-  });
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  const mpin = getMpin();
 
-  save(keys.workouts, state.workouts);
-  workoutForm.reset();
-  renderAll();
-});
-
-mealForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const day = document.getElementById("meal-day").value;
-  const mealType = document.getElementById("meal-type").value;
-  const name = document.getElementById("meal-name").value.trim();
-
-  state.meals.unshift({
-    day,
-    mealType,
-    name,
-    at: new Date().toISOString(),
-  });
-
-  save(keys.meals, state.meals);
-  mealForm.reset();
-  renderAll();
-});
-
-mindfulnessForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const note = document.getElementById("mindfulness-note").value.trim();
-
-  state.notes.unshift({
-    note,
-    at: new Date().toISOString(),
-  });
-
-  save(keys.notes, state.notes);
-  mindfulnessForm.reset();
-  renderAll();
-});
-
-startSessionBtn.addEventListener("click", () => {
-  if (timer) {
+  if (mpin.length !== 4) {
+    setStatus("MPIN must be exactly 4 digits.", true);
     return;
   }
 
-  const minutes = Number(meditationMinutes.value);
-  if (!minutes || minutes < 1) {
-    timerStatus.textContent = "Enter a valid number of minutes.";
-    return;
-  }
+  persistConfig();
+  setStatus("Checking credentials from Google Drive...");
 
-  secondsRemaining = minutes * 60;
-  updateTimerStatus();
+  try {
+    const records = await fetchCredentialRecords();
+    const match = await findMatchingUser(records, username, password, mpin);
 
-  timer = setInterval(() => {
-    secondsRemaining -= 1;
-    if (secondsRemaining <= 0) {
-      clearInterval(timer);
-      timer = null;
-      timerStatus.textContent = "Session complete. Great job staying present!";
+    if (!match) {
+      setStatus("Invalid username, password, or MPIN.", true);
       return;
     }
-    updateTimerStatus();
-  }, 1000);
+
+    if (cacheMpinInput.checked) {
+      state.cachedMpin[username] = await hashText(mpin);
+      save(keys.cachedMpin, state.cachedMpin);
+    }
+
+    setStatus(`Welcome ${username}! Login successful.`, false, true);
+  } catch (error) {
+    setStatus(error.message, true);
+  }
 });
 
-stopSessionBtn.addEventListener("click", () => {
-  if (!timer) {
+registerBtn.addEventListener("click", async () => {
+  persistConfig();
+
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  const mpin = getMpin();
+
+  if (!username || !password || mpin.length !== 4) {
+    setStatus("Enter username, password, and a 4-digit MPIN before registering.", true);
     return;
   }
-  clearInterval(timer);
-  timer = null;
-  timerStatus.textContent = "Session stopped.";
+
+  if (!state.config.registerWebhook) {
+    setStatus("Register webhook URL is missing in setup section.", true);
+    return;
+  }
+
+  setStatus("Sending registration request...");
+
+  try {
+    const payload = {
+      username,
+      passwordHash: await hashText(password),
+      mpinHash: await hashText(mpin),
+      createdAt: new Date().toISOString(),
+    };
+
+    const response = await fetch(state.config.registerWebhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Register request failed (${response.status}).`);
+    }
+
+    setStatus("Registration submitted to Google Drive webhook.", false, true);
+  } catch (error) {
+    setStatus(`Registration failed: ${error.message}`, true);
+  }
 });
 
-function updateTimerStatus() {
-  const minutes = Math.floor(secondsRemaining / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (secondsRemaining % 60).toString().padStart(2, "0");
-  timerStatus.textContent = `Meditation in progress: ${minutes}:${seconds}`;
+fingerBtn.addEventListener("click", async () => {
+  const username = usernameInput.value.trim();
+  const mpin = getMpin();
+
+  if (!username || mpin.length !== 4) {
+    setStatus("Enter username and MPIN first.", true);
+    return;
+  }
+
+  const savedHash = state.cachedMpin[username];
+  if (!savedHash) {
+    setStatus("No local cached MPIN found for this user.", true);
+    return;
+  }
+
+  const inputHash = await hashText(mpin);
+  if (savedHash !== inputHash) {
+    setStatus("Cached MPIN mismatch.", true);
+    return;
+  }
+
+  setStatus("Local MPIN check passed. Fingerprint verification mocked as successful.", false, true);
+});
+
+async function fetchCredentialRecords() {
+  if (!state.config.driveFileId || !state.config.driveApiKey) {
+    throw new Error("Drive File ID and API key are required in setup section.");
+  }
+
+  const url = new URL(`https://www.googleapis.com/drive/v3/files/${state.config.driveFileId}`);
+  url.searchParams.set("alt", "media");
+  url.searchParams.set("key", state.config.driveApiKey);
+
+  const response = await fetch(url.toString());
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch credentials from Google Drive (${response.status}).`);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data.users)) {
+    throw new Error("Credential file format is invalid. Expected { users: [] }.");
+  }
+
+  return data.users;
 }
 
-function renderAll() {
-  workoutList.innerHTML = state.workouts
-    .map(
-      (item) =>
-        `<li><strong>${escapeHtml(item.type)}</strong> — ${item.duration} min, ${item.calories} cal</li>`
-    )
-    .join("");
+async function findMatchingUser(records, username, password, mpin) {
+  const passwordHash = await hashText(password);
+  const mpinHash = await hashText(mpin);
 
-  mealList.innerHTML = state.meals
-    .map(
-      (item) =>
-        `<li><strong>${escapeHtml(item.day)} ${escapeHtml(item.mealType)}</strong> — ${escapeHtml(item.name)}</li>`
-    )
-    .join("");
-
-  mindfulnessList.innerHTML = state.notes
-    .map((item) => `<li>${escapeHtml(item.note)}</li>`)
-    .join("");
-
-  summaryWorkouts.textContent = state.workouts.length;
-  summaryMinutes.textContent = state.workouts.reduce((acc, item) => acc + item.duration, 0);
-  summaryCalories.textContent = state.workouts.reduce((acc, item) => acc + item.calories, 0);
-  summaryMeals.textContent = state.meals.length;
-  summaryNotes.textContent = state.notes.length;
+  return records.find(
+    (entry) =>
+      entry.username === username &&
+      entry.passwordHash === passwordHash &&
+      entry.mpinHash === mpinHash
+  );
 }
 
-function load(key) {
+async function hashText(input) {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function setupMpinInputs() {
+  mpinInputs.forEach((input, index) => {
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/\D/g, "").slice(0, 1);
+      if (input.value && index < mpinInputs.length - 1) {
+        mpinInputs[index + 1].focus();
+      }
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Backspace" && !input.value && index > 0) {
+        mpinInputs[index - 1].focus();
+      }
+    });
+  });
+}
+
+function getMpin() {
+  return mpinInputs.map((input) => input.value).join("");
+}
+
+function autofillMpinFromCache() {
+  usernameInput.addEventListener("blur", async () => {
+    const username = usernameInput.value.trim();
+    if (!username || !state.cachedMpin[username]) {
+      return;
+    }
+
+    setStatus("Cached MPIN exists for this user. Enter MPIN to continue.");
+  });
+}
+
+function hydrateConfig() {
+  driveFileIdInput.value = state.config.driveFileId;
+  driveApiKeyInput.value = state.config.driveApiKey;
+  registerWebhookInput.value = state.config.registerWebhook;
+}
+
+function persistConfig() {
+  state.config = {
+    driveFileId: driveFileIdInput.value.trim(),
+    driveApiKey: driveApiKeyInput.value.trim(),
+    registerWebhook: registerWebhookInput.value.trim(),
+  };
+  save(keys.config, state.config);
+}
+
+function setStatus(message, isError = false, isOk = false) {
+  statusText.textContent = message;
+  statusText.classList.remove("error", "ok");
+  if (isError) {
+    statusText.classList.add("error");
+  }
+  if (isOk) {
+    statusText.classList.add("ok");
+  }
+}
+
+function load(key, fallback) {
   try {
-    return JSON.parse(localStorage.getItem(key)) || [];
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
 
 function save(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-renderAll();
