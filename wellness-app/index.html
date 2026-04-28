@@ -8,66 +8,60 @@
   </head>
   <body>
     <main class="mobile-shell">
+      <header class="hero">
+        <div>
+          <p class="greeting">Welcome back,</p>
+          <h1>FinFrnd</h1>
+          <p class="subtitle">Secure banking made friendly</p>
+        </div>
+        <button class="ghost-btn" type="button">Need Help?</button>
+      </header>
+
       <section class="login-card" aria-label="FinFrnd login">
-        <h1 class="brand">FinFrnd</h1>
-
-        <form id="login-form" class="stack" autocomplete="off">
-          <label>
-            Username
-            <input id="username" type="text" placeholder="john.doe" required />
-          </label>
-
-          <label>
-            Password
-            <input id="password" type="password" placeholder="••••••••" required />
-          </label>
-
-          <fieldset class="mpin-fieldset">
-            <legend>MPIN</legend>
-            <div id="mpin-boxes" class="mpin-boxes" role="group" aria-label="Enter 4 digit MPIN">
-              <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
-              <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
-              <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
-              <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
-            </div>
-          </fieldset>
-
-          <label class="remember">
-            <input id="cache-mpin" type="checkbox" checked /> Cache MPIN locally on this device
-          </label>
-
-          <button id="login-btn" type="submit">Log In</button>
-        </form>
-
-        <div class="actions">
-          <button id="register-btn" class="secondary" type="button">Register</button>
-          <button id="finger-btn" class="secondary" type="button">Use Fingerprint</button>
+        <div class="profile-row">
+          <div class="avatar">FF</div>
+          <div>
+            <h2 id="customer-name">Gudise Sudhakar</h2>
+            <p class="customer-id">CRN • XXXX133</p>
+          </div>
         </div>
 
-        <details>
-          <summary>Google Drive setup</summary>
-          <p>
-            Login credentials are read from a JSON file in Google Drive (public file URL recommended for demo).
-            For production, use OAuth + backend proxy.
-          </p>
-          <label>
-            Drive File ID
-            <input id="drive-file-id" type="text" placeholder="1AbCdEf..." />
-          </label>
-          <label>
-            API Key
-            <input id="drive-api-key" type="password" placeholder="AIza..." />
-          </label>
-          <label>
-            Register Webhook URL (optional)
-            <input id="register-webhook" type="url" placeholder="https://script.google.com/..." />
-          </label>
-        </details>
+        <p class="instruction">Login using your MPIN or biometric authentication.</p>
 
-        <p id="status" class="status" aria-live="polite">Ready.</p>
+        <button id="biometric-btn" class="biometric" type="button">
+          <span class="bio-icon">◎</span>
+          Login with Fingerprint / Face ID
+        </button>
+
+        <div class="or-divider"><span>OR</span></div>
+
+        <div class="mpin-wrap">
+          <label class="mpin-label" for="mpin-1">Enter 6-digit MPIN</label>
+          <div class="mpin-boxes" role="group" aria-label="Enter 6 digit MPIN">
+            <input id="mpin-1" class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+            <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+            <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+            <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+            <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+            <input class="mpin" inputmode="numeric" maxlength="1" pattern="[0-9]" type="password" />
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button id="login-btn" class="primary" type="button">Login with MPIN</button>
+          <button class="link-btn" type="button">Forgot MPIN?</button>
+        </div>
+
+        <p id="status" class="status" aria-live="polite">Ready to login securely.</p>
       </section>
 
-      <footer>Copyright © 2026 FinFrnd</footer>
+      <nav class="bottom-nav" aria-label="Bottom navigation">
+        <button type="button">Home</button>
+        <button type="button">Cards</button>
+        <button type="button" class="scan">Scan</button>
+        <button type="button">Offers</button>
+        <button type="button">More</button>
+      </nav>
     </main>
 
     <script src="app.js"></script>
