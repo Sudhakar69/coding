@@ -1,11 +1,10 @@
 const keys = {
   config: "finfrnd_drive_config",
   cachedMpin: "finfrnd_cached_mpin",
-  passkeys: "finfrnd_passkeys",
+  passkeyId: "finfrnd_passkey_id",
 };
 
 const loginForm = document.getElementById("login-form");
-const crnInput = document.getElementById("crn");
 const mpinInput = document.getElementById("mpin");
 const forgotMpinBtn = document.getElementById("forgot-mpin");
 const driveFileIdInput = document.getElementById("drive-file-id");
@@ -18,8 +17,8 @@ const statusText = document.getElementById("status");
 
 const state = {
   config: load(keys.config, { driveFileId: "", driveApiKey: "", registerWebhook: "" }),
-  cachedMpin: load(keys.cachedMpin, {}),
-  passkeys: load(keys.passkeys, {}),
+  cachedMpin: load(keys.cachedMpin, ""),
+  passkeyId: localStorage.getItem(keys.passkeyId) || "",
 };
 
 hydrateConfig();
@@ -27,48 +26,44 @@ setBiometricAvailability();
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
-  const crn = crnInput.value.trim();
   const mpin = cleanMpin(mpinInput.value);
 
-  if (!crn || mpin.length !== 6) {
-    setStatus("Please enter CRN and 6 digit MPIN.", true);
+  if (mpin.length !== 6) {
+    setStatus("Please enter a valid 6 digit MPIN.", true);
     return;
   }
 
   persistConfig();
-  setStatus("Checking credentials from Google Drive...");
+  setStatus("Checking MPIN from Google Drive...");
 
   try {
     const records = await fetchCredentialRecords();
-    const matched = await findMatchingUser(records, crn, mpin);
+    const matched = await findMatchingMpin(records, mpin);
 
     if (!matched) {
-      setStatus("Invalid CRN or MPIN.", true);
+      setStatus("Invalid MPIN.", true);
       return;
     }
 
-    state.cachedMpin[crn] = await hashText(mpin);
+    state.cachedMpin = await hashText(mpin);
     save(keys.cachedMpin, state.cachedMpin);
 
-    setStatus(`Welcome ${crn}. Login successful.`, false, true);
+    setStatus("MPIN verified. Login successful.", false, true);
   } catch (error) {
     setStatus(error.message, true);
   }
 });
 
 forgotMpinBtn.addEventListener("click", () => {
-  setStatus("Please use the bank reset flow to recover MPIN.");
+  setStatus("Use your bank reset flow to recover MPIN.");
 });
 
 registerBtn.addEventListener("click", async () => {
   persistConfig();
 
-  const crn = crnInput.value.trim();
   const mpin = cleanMpin(mpinInput.value);
-
-  if (!crn || mpin.length !== 6) {
-    setStatus("Enter CRN and 6 digit MPIN before registering.", true);
+  if (mpin.length !== 6) {
+    setStatus("Enter 6 digit MPIN before registering.", true);
     return;
   }
 
@@ -81,7 +76,6 @@ registerBtn.addEventListener("click", async () => {
 
   try {
     const payload = {
-      crn,
       mpinHash: await hashText(mpin),
       createdAt: new Date().toISOString(),
     };
@@ -103,12 +97,6 @@ registerBtn.addEventListener("click", async () => {
 });
 
 enrollBioBtn.addEventListener("click", async () => {
-  const crn = crnInput.value.trim();
-  if (!crn) {
-    setStatus("Enter CRN before biometric enrollment.", true);
-    return;
-  }
-
   if (!isWebAuthnSupported()) {
     setStatus("Biometric enrollment is not supported on this device/browser.", true);
     return;
@@ -122,9 +110,9 @@ enrollBioBtn.addEventListener("click", async () => {
         challenge: randomBytes(32),
         rp: { name: "FinFrnd" },
         user: {
-          id: userIdBytes(crn),
-          name: crn,
-          displayName: crn,
+          id: userIdBytes(),
+          name: "finfrnd-user",
+          displayName: "FinFrnd User",
         },
         pubKeyCredParams: [{ type: "public-key", alg: -7 }],
         authenticatorSelection: { userVerification: "required", residentKey: "preferred" },
@@ -137,9 +125,8 @@ enrollBioBtn.addEventListener("click", async () => {
       throw new Error("No credential returned by authenticator.");
     }
 
-    state.passkeys[crn] = bufferToBase64Url(credential.rawId);
-    save(keys.passkeys, state.passkeys);
-
+    state.passkeyId = bufferToBase64Url(credential.rawId);
+    localStorage.setItem(keys.passkeyId, state.passkeyId);
     setStatus("Biometric enrolled successfully.", false, true);
   } catch (error) {
     setStatus(`Biometric enrollment failed: ${error.message}`, true);
@@ -147,22 +134,13 @@ enrollBioBtn.addEventListener("click", async () => {
 });
 
 biometricBtn.addEventListener("click", async () => {
-  const crn = crnInput.value.trim();
-
-  if (!crn) {
-    setStatus("Enter CRN before biometric login.", true);
-    return;
-  }
-
-  const cachedMpinHash = state.cachedMpin[crn];
-  if (!cachedMpinHash) {
+  if (!state.cachedMpin) {
     setStatus("No cached MPIN found. Login once with MPIN before biometric unlock.", true);
     return;
   }
 
-  const credentialId = state.passkeys[crn];
-  if (!credentialId) {
-    setStatus("No biometric enrolled for this CRN. Use app setup to enroll.", true);
+  if (!state.passkeyId) {
+    setStatus("No biometric enrolled on this device. Use app setup to enroll.", true);
     return;
   }
 
@@ -177,7 +155,7 @@ biometricBtn.addEventListener("click", async () => {
     const assertion = await navigator.credentials.get({
       publicKey: {
         challenge: randomBytes(32),
-        allowCredentials: [{ type: "public-key", id: base64UrlToBuffer(credentialId) }],
+        allowCredentials: [{ type: "public-key", id: base64UrlToBuffer(state.passkeyId) }],
         userVerification: "required",
         timeout: 60000,
       },
@@ -187,7 +165,7 @@ biometricBtn.addEventListener("click", async () => {
       throw new Error("Biometric verification did not complete.");
     }
 
-    setStatus(`Biometric verified. Welcome back ${crn}.`, false, true);
+    setStatus("Biometric verified. Welcome back.", false, true);
   } catch (error) {
     setStatus(`Biometric login failed: ${error.message}`, true);
   }
@@ -215,12 +193,9 @@ async function fetchCredentialRecords() {
   return data.users;
 }
 
-async function findMatchingUser(records, crn, mpin) {
+async function findMatchingMpin(records, mpin) {
   const mpinHash = await hashText(mpin);
-  return records.find((entry) => {
-    const entryCrn = entry.crn || entry.username;
-    return entryCrn === crn && entry.mpinHash === mpinHash;
-  });
+  return records.find((entry) => entry.mpinHash === mpinHash);
 }
 
 async function hashText(input) {
@@ -266,9 +241,8 @@ function isWebAuthnSupported() {
   return typeof window.PublicKeyCredential !== "undefined" && !!navigator.credentials;
 }
 
-function userIdBytes(crn) {
-  const bytes = new TextEncoder().encode(`finfrnd:${crn}`);
-  return bytes.slice(0, 64);
+function userIdBytes() {
+  return new Uint8Array([102, 105, 110, 102, 114, 110, 100, 45, 117, 115, 101, 114]);
 }
 
 function randomBytes(length) {
