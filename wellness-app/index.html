@@ -3,100 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Holistic Wellness Hub</title>
+    <title>FinFrnd Secure Login</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header>
-      <h1>Holistic Wellness Hub</h1>
-      <p>Fitness tracking, workouts, meal planning, meditation, and mindfulness in one app.</p>
-    </header>
+    <main class="stage">
+      <section class="phone-frame" aria-label="FinFrnd mobile login">
+        <div class="phone-screen">
+          <header class="brand-wrap">
+            <div class="logo-mark" aria-hidden="true">ff</div>
+            <div>
+              <h1>FinFrnd</h1>
+              <p>Smart Banking</p>
+            </div>
+          </header>
 
-    <main class="grid">
-      <section class="card" id="fitness-tracker">
-        <h2>Fitness Tracker + Workout Planner</h2>
-        <form id="workout-form">
-          <label>
-            Workout Type
-            <input type="text" id="workout-type" placeholder="Strength, Cardio, Yoga" required />
-          </label>
-          <label>
-            Duration (minutes)
-            <input type="number" id="workout-duration" min="1" required />
-          </label>
-          <label>
-            Calories Burned (optional)
-            <input type="number" id="workout-calories" min="0" />
-          </label>
-          <button type="submit">Add Workout</button>
-        </form>
-        <ul id="workout-list" class="entry-list"></ul>
-      </section>
+          <p class="welcome">Welcome back</p>
 
-      <section class="card" id="meal-planning">
-        <h2>Meal Planning</h2>
-        <form id="meal-form">
-          <label>
-            Day
-            <select id="meal-day" required>
-              <option value="">Select Day</option>
-              <option>Monday</option>
-              <option>Tuesday</option>
-              <option>Wednesday</option>
-              <option>Thursday</option>
-              <option>Friday</option>
-              <option>Saturday</option>
-              <option>Sunday</option>
-            </select>
-          </label>
-          <label>
-            Meal Type
-            <select id="meal-type" required>
-              <option value="">Select Meal</option>
-              <option>Breakfast</option>
-              <option>Lunch</option>
-              <option>Dinner</option>
-              <option>Snack</option>
-            </select>
-          </label>
-          <label>
-            Meal Plan
-            <input type="text" id="meal-name" placeholder="Grilled salmon with veggies" required />
-          </label>
-          <button type="submit">Add Meal</button>
-        </form>
-        <ul id="meal-list" class="entry-list"></ul>
-      </section>
+          <form id="login-form" class="login-form" autocomplete="off">
+            <label class="sr-only" for="crn">CRN</label>
+            <input id="crn" type="text" placeholder="CRN - XXXX192" required />
 
-      <section class="card" id="meditation">
-        <h2>Meditation & Mindfulness</h2>
-        <div class="timer-box">
-          <label>
-            Meditation Session (minutes)
-            <input type="number" id="meditation-minutes" min="1" value="5" />
-          </label>
-          <button id="start-session" type="button">Start Session</button>
-          <button id="stop-session" type="button" class="secondary">Stop</button>
-          <p id="timer-status">Timer not started.</p>
+            <label class="sr-only" for="mpin">MPIN</label>
+            <input id="mpin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Enter 6 digit MPIN" required />
+
+            <div class="row-end">
+              <button id="forgot-mpin" type="button" class="link-btn">Forgot MPIN?</button>
+            </div>
+
+            <button id="login-btn" type="submit" class="primary-btn">Login</button>
+          </form>
+
+          <p class="divider">--OR--</p>
+
+          <button id="biometric-btn" type="button" class="bio-btn">Unlock with Face ID / Fingerprint</button>
+
+          <details class="setup-panel">
+            <summary>App setup</summary>
+            <label>
+              Drive File ID
+              <input id="drive-file-id" type="text" placeholder="1AbCdEf..." />
+            </label>
+            <label>
+              API Key
+              <input id="drive-api-key" type="password" placeholder="AIza..." />
+            </label>
+            <label>
+              Register Webhook URL (optional)
+              <input id="register-webhook" type="url" placeholder="https://script.google.com/..." />
+            </label>
+            <div class="setup-actions">
+              <button id="register-btn" class="secondary-btn" type="button">Register User</button>
+              <button id="enroll-bio-btn" class="secondary-btn" type="button">Enroll Biometric</button>
+            </div>
+          </details>
+
+          <p id="status" class="status" aria-live="polite">Ready.</p>
+
+          <footer>
+            <a href="#">Secure Banking</a>
+            <span>|</span>
+            <a href="#">Privacy Policy</a>
+          </footer>
         </div>
-
-        <form id="mindfulness-form">
-          <label>
-            Mindfulness Reflection
-            <textarea id="mindfulness-note" rows="3" placeholder="How do you feel today?" required></textarea>
-          </label>
-          <button type="submit">Save Reflection</button>
-        </form>
-        <ul id="mindfulness-list" class="entry-list"></ul>
-      </section>
-
-      <section class="card" id="summary">
-        <h2>Today’s Snapshot</h2>
-        <div class="summary-item"><strong>Total workouts:</strong> <span id="summary-workouts">0</span></div>
-        <div class="summary-item"><strong>Total minutes trained:</strong> <span id="summary-minutes">0</span></div>
-        <div class="summary-item"><strong>Total calories burned:</strong> <span id="summary-calories">0</span></div>
-        <div class="summary-item"><strong>Meals planned:</strong> <span id="summary-meals">0</span></div>
-        <div class="summary-item"><strong>Mindfulness notes:</strong> <span id="summary-notes">0</span></div>
       </section>
     </main>
 

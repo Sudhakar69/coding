@@ -1,12 +1,13 @@
 # coding
 
-## Holistic Wellness Hub (Fitness + Workout + Meal Planning + Meditation)
+## FinFrnd Mobile Login Prototype
 
-A simple web app that combines:
-- Fitness tracking + workout logging
-- Meal planning
-- Meditation timer
-- Mindfulness journaling
+A mobile-first banking-style login prototype with:
+- CRN + 6-digit MPIN login
+- Credentials validated from a Google Drive-hosted JSON file
+- Local MPIN hash caching for faster device-side unlock readiness
+- Face ID / fingerprint login using WebAuthn passkeys
+- Optional registration webhook for new users
 
 ### Run locally
 
@@ -16,3 +17,19 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000` in your browser.
+
+### Google Drive credential file format
+
+```json
+{
+  "users": [
+    {
+      "crn": "XXXX192",
+      "mpinHash": "<sha256>"
+    }
+  ]
+}
+```
+
+> The app also accepts `username` in place of `crn` for backward compatibility.
+> For production, move credential verification and WebAuthn challenge validation to a secure backend.
