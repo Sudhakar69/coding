@@ -30,4 +30,5 @@ Then open `http://localhost:8000` in your browser.
 }
 ```
 
+> Note: Browser-side Google Drive API key access usually requires the credential file to be publicly readable.
 > For production, move credential verification and WebAuthn challenge validation to a secure backend.

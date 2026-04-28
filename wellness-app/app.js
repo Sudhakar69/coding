@@ -17,7 +17,7 @@ const statusText = document.getElementById("status");
 
 const state = {
   config: load(keys.config, { driveFileId: "", driveApiKey: "", registerWebhook: "" }),
-  cachedMpin: load(keys.cachedMpin, ""),
+  cachedMpin: normalizeCachedMpin(load(keys.cachedMpin, "")),
   passkeyId: localStorage.getItem(keys.passkeyId) || "",
 };
 
@@ -213,6 +213,18 @@ function cleanMpin(value) {
 mpinInput.addEventListener("input", () => {
   cleanMpin(mpinInput.value);
 });
+
+function normalizeCachedMpin(value) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    return "";
+  }
+
+  return "";
+}
 
 function hydrateConfig() {
   driveFileIdInput.value = state.config.driveFileId;
