@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "oSqcbQgsiZc=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\tarak\\test\\coding\\wellness-app\\wellness-app.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tarak\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.9\\microsoft.aspnetcore.app.internal.assets.10.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
