@@ -1,0 +1,8 @@
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\wellness-app.exe
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\nuget.config
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\appsettings.Development.json
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\appsettings.json
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\wellness-app.dll
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\wellness-app.runtimeconfig.json
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\wellness-app.pdb
+C:\Users\tarak\test\coding\wellness-app\bin\Release\net10.0\publish\wellness-app.deps.json
